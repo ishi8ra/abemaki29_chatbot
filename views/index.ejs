@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title><%= title %></title>
+  </head>
+  <body>
+    <section class="msger">
+      <!-- チャットウィンドウのヘッダ -->
+      <header class="msger-header">
+        <div class="msger-header-title"><i class="fas fa-comment-alt"></i> <%= title %></div>
+        <div class="msger-header-options">
+          <span><i class="fas fa-cog"></i></span>
+        </div>
+      </header>
+
+      <!-- チャットウィンドウのメイン部分 -->
+      <main class="msger-chat">
+        <div class="msg left-msg">
+          <div class="msg-img" style="background-image: url(/static/image/neko.jpg)"></div>
+
+          <div class="msg-bubble">
+            <div class="msg-info">
+              <div class="msg-info-name"><%= botName %></div>
+              <div class="msg-info-time"><%= nowTime %></div>
+            </div>
+            <div class="msg-text"><%= bot1stMessage %></div>
+          </div>
+        </div>
+      </main>
+      <!-- メッセージ送信フォーム -->
+      <form class="msger-inputarea">
+        <input type="text" class="msger-input" placeholder="メッセージを入力してください" />
+        <button type="submit" class="msger-send-btn">送信</button>
+      </form>
+    </section>
+
+    <!-- メッセージ送信スクリプト -->
+    <script>
+      const msgerForm = get(".msger-inputarea");
+      const msgerInput = get(".msger-input");
+      const msgerChat = get(".msger-chat");
+      // アイコン
+      const BOT_IMG = "/static/image/neko.jpg";
+      const PERSON_IMG = "/static/image/you.jpg";
+      // 名前
+      const BOT_NAME = "<%= botName %>";
+      const PERSON_NAME = "<%= userName %>";
+      // メッセージ送信時の処理
+      msgerForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const msgText = msgerInput.value;
+        if (!msgText) return;
+        appendMessage(PERSON_NAME, PERSON_IMG, "right", msgText);
+        msgerInput.value = "";
+        // API送信
+        var url = "/sendMsg?keyword=" + msgText;
+        var request = new XMLHttpRequest();
+        request.open("GET", url, true);
+        request.responseType = "text";
+        // APIメッセージ取得時の処理
+        request.onload = function () {
+          var msgText = this.response;
+          setTimeout(() => {
+            appendMessage(BOT_NAME, BOT_IMG, "left", msgText);
+          }, 900);
+        };
+        // APIメッセージ送信
+        request.send();
+      });
+      // メッセージウィンドウ更新処理
+      function appendMessage(name, img, side, text) {
+        const msgHTML = `
+        <div class="msg ${side}-msg">
+          <div class="msg-img" style="background-image: url(${img})"></div>
+          <div class="msg-bubble">
+            <div class="msg-info">
+              <div class="msg-info-name">${name}</div>
+              <div class="msg-info-time">${formatDate(new Date())}</div>
+            </div>
+            <div class="msg-text">${text}</div>
+          </div>
+        </div>
+      `;
+        msgerChat.insertAdjacentHTML("beforeend", msgHTML);
+        msgerChat.scrollTop += 500;
+      }
+      function get(selector, root = document) {
+        return root.querySelector(selector);
+      }
+      function formatDate(date) {
+        const h = "0" + date.getHours();
+        const m = "0" + date.getMinutes();
+        return `${h.slice(-2)}:${m.slice(-2)}`;
+      }
+    </script>
+
+    <!--スタイル-->
+    <style type="text/css">
+      :root {
+        --body-bg: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        --msger-bg: #fff;
+        --border: 2px solid #ddd;
+        --left-msg-bg: #ececec;
+        --right-msg-bg: #579ffb;
+      }
+      html {
+        box-sizing: border-box;
+      }
+      *,
+      *:before,
+      *:after {
+        margin: 0;
+        padding: 0;
+        box-sizing: inherit;
+      }
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-image: var(--body-bg);
+        font-family: Helvetica, sans-serif;
+      }
+      .msger {
+        display: flex;
+        flex-flow: column wrap;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 867px;
+        margin: 25px 10px;
+        height: calc(100% - 50px);
+        border: var(--border);
+        border-radius: 5px;
+        background: var(--msger-bg);
+        box-shadow: 0 15px 15px -5px rgba(0, 0, 0, 0.2);
+      }
+      .msger-header {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        border-bottom: var(--border);
+        background: #eee;
+        color: #666;
+      }
+      .msger-chat {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+      }
+      .msger-chat::-webkit-scrollbar {
+        width: 6px;
+      }
+      .msger-chat::-webkit-scrollbar-track {
+        background: #ddd;
+      }
+      .msger-chat::-webkit-scrollbar-thumb {
+        background: #bdbdbd;
+      }
+      .msg {
+        display: flex;
+        align-items: flex-end;
+        margin-bottom: 10px;
+      }
+      .msg:last-of-type {
+        margin: 0;
+      }
+      .msg-img {
+        width: 50px;
+        height: 50px;
+        margin-right: 10px;
+        background: #ddd;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        border-radius: 50%;
+      }
+      .msg-bubble {
+        max-width: 450px;
+        padding: 15px;
+        border-radius: 15px;
+        background: var(--left-msg-bg);
+      }
+      .msg-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .msg-info-name {
+        margin-right: 10px;
+        font-weight: bold;
+      }
+      .msg-info-time {
+        font-size: 0.85em;
+      }
+      .left-msg .msg-bubble {
+        border-bottom-left-radius: 0;
+      }
+      .right-msg {
+        flex-direction: row-reverse;
+      }
+      .right-msg .msg-bubble {
+        background: var(--right-msg-bg);
+        color: #fff;
+        border-bottom-right-radius: 0;
+      }
+      .right-msg .msg-img {
+        margin: 0 0 0 10px;
+      }
+      .msger-inputarea {
+        display: flex;
+        padding: 10px;
+        border-top: var(--border);
+        background: #eee;
+      }
+      .msger-inputarea * {
+        padding: 10px;
+        border: none;
+        border-radius: 3px;
+        font-size: 1em;
+      }
+      .msger-input {
+        flex: 1;
+        background: #ddd;
+      }
+      .msger-send-btn {
+        margin-left: 10px;
+        background: rgb(0, 196, 65);
+        color: #fff;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.23s;
+      }
+      .msger-send-btn:hover {
+        background: rgb(0, 180, 50);
+      }
+      .msger-chat {
+        background-color: #fcfcfe;
+        background-image: url("/static/image/bkimg.jpg");
+      }
+    </style>
+  </body>
+</html>
